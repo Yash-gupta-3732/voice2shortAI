@@ -25,6 +25,12 @@ export class Matrix3 {
     return this;
   }
 
+  public clone(): Matrix3 {
+    const m = new Matrix3();
+    m.elements.set(this.elements);
+    return m;
+  }
+
   public copy(m: Matrix3): Matrix3 {
     this.elements.set(m.elements);
     return this;
