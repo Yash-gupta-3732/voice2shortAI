@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  reactStrictMode: false,
+  serverExternalPackages: ['@remotion/bundler', '@remotion/renderer', 'esbuild'],
 };
 
 export default nextConfig;
