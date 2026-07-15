@@ -1,56 +1,61 @@
 import React from 'react';
 import { AppearanceState, AnimationState } from '../../../types/visuals';
 
-interface VectorProps {
+// Import our new premium modular assets
+import { ModularHead } from '../../assets/characters/heads/Head';
+import { BaseTorso } from '../../assets/characters/torsos/BaseTorso';
+import { BaseLimb } from '../../assets/characters/limbs/BaseLimbs';
+import { AstronautTorso, AstronautLimb } from '../../assets/characters/outfits/AstronautOutfit';
+import { AstronautHelmet } from '../../assets/characters/accessories/Accessories';
+
+export interface VectorProps {
   semanticId: string;
   appearance: AppearanceState;
   animationState: AnimationState;
 }
 
-export const VectorElementResolver: React.FC<VectorProps> = ({ semanticId, appearance, animationState }) => {
-  // Extract base colors with fallbacks
-  const fill = appearance.fillColor || '#94a3b8';
-  const stroke = appearance.strokeColor || '#334155';
+export const VectorElementResolver: React.FC<VectorProps> = (props) => {
+  const { semanticId, appearance, animationState } = props;
 
-  // Head and Facial Rig Logic
-  if (semanticId.includes('_head')) {
+  // The semanticId format is typically '{theme}_{boneId}' (e.g. 'astronaut_chest' or 'default_left_lower_arm')
+  const parts = semanticId.split('_');
+  const theme = parts[0]; // 'astronaut' or 'default'
+  const boneType = parts.slice(1).join('_'); // 'chest', 'left_lower_arm', 'head'
+
+  // --- 1. HEAD RESOLUTION ---
+  if (boneType === 'head') {
     return (
-      <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
-        <rect width="40" height="40" rx="20" fill={fill} stroke={stroke} strokeWidth="2" />
+      <div style={{ position: 'relative', width: 40, height: 40 }}>
+        {/* Base Modular Head (Face, Eyes, Mouth, Hair) */}
+        <div style={{ position: 'absolute', top: 0, left: 0 }}>
+          <ModularHead appearance={appearance} animationState={animationState} />
+        </div>
         
-        {/* Eyes: Blinking Logic */}
-        {!animationState.isBlinking ? (
-          <>
-            <circle cx="12" cy="15" r="3" fill="#0f172a" />
-            <circle cx="28" cy="15" r="3" fill="#0f172a" />
-          </>
-        ) : (
-          <>
-            <line x1="9" y1="15" x2="15" y2="15" stroke="#0f172a" strokeWidth="2" />
-            <line x1="25" y1="15" x2="31" y2="15" stroke="#0f172a" strokeWidth="2" />
-          </>
+        {/* Accessory Overlays based on theme */}
+        {theme === 'astronaut' && (
+          <div style={{ position: 'absolute', top: 0, left: 0 }}>
+            <AstronautHelmet appearance={appearance} />
+          </div>
         )}
-
-        {/* Mouth: Talking/Expression Logic */}
-        {animationState.isTalking ? (
-          <ellipse cx="20" cy="28" rx="6" ry="4" fill="#0f172a" />
-        ) : (
-          <path d="M 14 26 Q 20 32 26 26" fill="none" stroke="#0f172a" strokeWidth="2" strokeLinecap="round" />
-        )}
-      </svg>
+      </div>
     );
   }
 
-  // Generic Limbs / Torso / Props
-  let label = semanticId.split('_').pop() || '';
-  if (label === 'chest') label = 'torso';
+  // --- 2. TORSO RESOLUTION ---
+  if (boneType === 'chest' || boneType === 'torso') {
+    if (theme === 'astronaut') {
+      return <AstronautTorso appearance={appearance} />;
+    }
+    // Fallback or 'default' theme
+    return <BaseTorso appearance={appearance} />;
+  }
 
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
-      <rect width="40" height="40" rx="10" fill={fill} stroke={stroke} strokeWidth="2" />
-      <text x="20" y="24" fontFamily="sans-serif" fontSize="8" textAnchor="middle" fill="#000">
-        {label}
-      </text>
-    </svg>
-  );
+  // --- 3. LIMB RESOLUTION ---
+  // Covers upper_arm, lower_arm, hand, upper_leg, lower_leg, foot, toe
+  if (theme === 'astronaut') {
+    return <AstronautLimb appearance={appearance} limbType={boneType} />;
+  }
+  
+  // Fallback to bare skin/simple limbs
+  return <BaseLimb appearance={appearance} limbType={boneType} />;
 };
